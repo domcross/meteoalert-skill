@@ -1,22 +1,67 @@
-name: Meteoalert
+name: NOAA alerts
 skillMetadata:
   sections:
-    - name: Options << Name of section
+    - name: Options
       fields:
-        - name: internal_python_variable_name
+        - name: zone_id_label
+          type: label
+          label: >
+            <p>
+            Please go to <a href=http://meteoalarm.eu/</a>
+            and look up your country-code and region name
+            </p>
+
+        - name: country_code
           type: text
-          label: Setting Friendly Display Name
+          label: Country code (2 letters)
           value: ""
-          placeholder: demo prompt in the input box
-    - name: Login << Name of another section
-      fields:
-        - type: label
-          label: Just a little bit of extra info for the user to understand following settings
-        - name: username
+          placeholder: "IT"
+
+        - name: region_name
           type: text
-          label: Username
+          label: Region name
           value: ""
-        - name: password
-          type: password
-          label: Password
+          placeholder: "Toscana"
+
+        - name: language
+          type: text
+          label: Language
           value: ""
+          placeholder: "en-GB"
+
+        - name: urgency
+          type: select
+          label: Urgency
+          options: "Immediate|Immediate;Expected|Immediate,Expected;Future|Immediate,Expected,Future"
+          value: "Immediate"
+
+        - name: severity
+          type: select
+          label: Severity
+          options: "Extreme|Extreme;Severe|Extreme,Severe;Moderate|Extreme,Severe,Moderate;Minor|Extreme,Severe,Moderate,Minor"
+          value: "Extreme"
+
+        - name: certainty
+          type: select
+          label: Certainty
+          options: "Observed|Observed;Likely|Observed,Likely;Possible|Observed,Likely,Possible"
+          value: "Observed"
+
+        - name: auto_alert_label
+          type: label
+          label: >
+            <p>
+            When automatic alert is turned on Mycroft will perform scheduled Meteoalarm updates, e.g. every 10 minutes.
+            In case alerts for extreme or severe conditions with immediate urgency are Observed
+            Mycroft will speak the alerts headline and instructions automatically.
+            </p>
+
+        - label: Automatic alert
+          name: auto_alert
+          type: checkbox
+          value: false
+
+        - label: Update interval (minutes)
+          name: update_interval
+          type: number
+          value: 10
