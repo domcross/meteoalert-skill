@@ -7,6 +7,17 @@ from datetime import datetime, date
 class Meteoalert(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
+        self.monitoring = False
+        self.update_interval = 600
+        self.country_code = ""
+        self.region_name = ""
+        self.language = ""
+        self.severity = ""
+        self.urgency = ""
+        self.certainty = ""
+        self.meteo = None
+        self.alerts = []
+        self.status = "stopped"
 
     def initialize(self):
         self._setup()
@@ -17,17 +28,18 @@ class Meteoalert(MycroftSkill):
         self._setup()
 
     def _setup(self):
-        self.country_code = self.settings.get('country_code','')
-        self.region_name = self.settings.get('region_name','')
-        self.language = self.settings.get('language','en-GB')
+        self.country_code = "DE"  # self.settings.get('country_code', '')
+        self.region_name = self.settings.get('region_name', '')
+        self.language = self.settings.get('language', 'en-GB')
         if self.country_code and self.region_name:
-            self.meteo = Meteoalarm(self.country_code, self.region_name, self.language)
+            self.meteo = Meteoalarm(self.country_code, self.region_name,
+                                    self.language)
         else:
             self.meteo = None
 
-        self.severity = self.settings.get('severity','Extreme')
-        self.urgency = self.settings.get('urgency','Immediate')
-        self.certainty = self.settings.get('certainty','Observed')
+        self.severity = self.settings.get('severity', 'Extreme')
+        self.urgency = self.settings.get('urgency', 'Immediate')
+        self.certainty = self.settings.get('certainty', 'Observed')
 
         self.alerts = []
         self.status = "stopped"
@@ -49,13 +61,13 @@ class Meteoalert(MycroftSkill):
         filteredalerts = []
         for ap in self.alerts:
             #ap = alert['properties']
-            status = ap['status']
-            msgType = ap['messageType']
+            #status = ap['status']
+            #msgType = ap['messageType']
             urgency = ap['urgency']
             severity = ap['severity']
             certainty = ap['certainty']
             # filter messages: only actual and severity/certainty/urgency according to skill setting
-            if status=='Actual' and msgType in ['Alert'] and severity in "Extreme,Severe" and certainty in "Observed" and urgency in "Immediate":
+            if severity in "Extreme,Severe" and certainty in "Observed" and urgency in "Immediate":
                 filteredalerts.append(ap)
 
         self.log.info("found alerts: {}".format(len(filteredalerts)))
@@ -95,13 +107,13 @@ class Meteoalert(MycroftSkill):
         foundalerts = False
         for ap in self.alerts:
             #ap = alert['properties']
-            status = ap['status']
-            msgType = ap['messageType']
+            #status = ap['status']
+            #msgType = ap['messageType']
             urgency = ap['urgency']
             severity = ap['severity']
             certainty = ap['certainty']
             # filter messages: only actual and severity/certainty/urgency according to skill setting
-            if status=='Actual' and msgType in ['Alert', 'Update'] and severity in self.severity and certainty in self.certainty and urgency in self.urgency:
+            if severity in self.severity and certainty in self.certainty and urgency in self.urgency:
                 if not foundalerts:
                     filteredalerts = []
                     foundalerts = True
@@ -131,16 +143,25 @@ class Meteoalert(MycroftSkill):
             self.alerts = []
             return foundalerts
         self.log.debug("_check_for_alerts")
-        newalerts = self.meteo.get_alert()
+        try:
+            newalerts = self.meteo.get_alert()
+        except Exception:
+            self.speak_dialog("exception")
+            return foundalerts
 
-        for alert in newalerts['features']:
-            ap = alert['properties']
-            # filter messages: only sent today or not expired
-            if self._get_datetime(ap['sent']).date() == date.today() or ("expires" in ap.keys() and self._get_datetime(ap['expires']).date() >= date.today()):
-                if not foundalerts:
-                    self.alerts = []
-                    foundalerts = True
-                self.alerts.append(ap)
+        if not newalerts:
+            return foundalerts
+        # it looks like meteoalertapi always returns only one alert at a time
+        #for alert in newalerts:
+        #    self.log.info("alert {}".format(alert))
+        #    ap = alert['properties']
+        ap = newalerts
+        # filter messages: only sent today or not expired
+        if self._get_datetime(ap['effective']).date() == date.today() or ("expires" in ap.keys() and self._get_datetime(ap['expires']).date() >= date.today()):
+            if not foundalerts:
+                self.alerts = []
+                foundalerts = True
+            self.alerts.append(ap)
         return foundalerts
 
     def stop(self):
