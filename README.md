@@ -1,3 +1,5 @@
+**_NOTE: this skill is deprecated, its functionality is now part of the [Severe Weather Information Skill](https://github.com/domcross/severe-weather-information-skill)_**
+
 # <img src="https://raw.githack.com/FortAwesome/Font-Awesome/master/svgs/solid/robot.svg" card_color="#40DBB0" width="50" height="50" style="vertical-align:bottom"/> Meteoalert
 Checks meteoalarm.eu (european alert for extreme weather) and notifies you about the results
 
